@@ -143,6 +143,16 @@ int main(void)
   GPIOA->MODER |= 1<<(15*2);
   GPIOA->OTYPER &= ~(1 << 15);
 
+  RCC->APB1ENR1 |= 1<<4;
+  TIM6->PSC = 16999; //
+  TIM6->ARR = 9999; // 170,000,000 MHz / 17,000 / 10,000 = 1 Hz
+  TIM6->DIER |= 1<<0;
+  NVIC_SetPriority(TIM6_DAC_IRQn, 0);
+  NVIC_EnableIRQ(TIM6_DAC_IRQn);
+
+  TIM6->CR1 |= 1<<0;
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -151,6 +161,7 @@ int main(void)
   {
     /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */
+	  /*
 	  GPIOB->BSRR = 1<<5;
 	  char txBuffer1[] = "RED LED ON\r\n";
 	  uint16_t Size1 = strlen(txBuffer1);
@@ -175,6 +186,7 @@ int main(void)
 	  uint16_t Size4 = strlen(txBuffer4);
 	  HAL_UART_Transmit(&huart3, txBuffer4, Size4, 100);
 	  HAL_Delay(1000);
+	  */
   }
   /* USER CODE END 3 */
 }
@@ -954,7 +966,14 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void TIM6_DAC_IRQHandler(void)
+{
+	if(TIM6->SR & (1<<0))
+	{
+    TIM6->SR &= ~(1<<0);
+    GPIOB->ODR ^= (1<<5);
+	}
+}
 /* USER CODE END 4 */
 
 /**
