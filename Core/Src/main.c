@@ -113,7 +113,7 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
+  //MX_GPIO_Init();
   MX_ADC1_Init();
   MX_COMP2_Init();
   MX_COMP3_Init();
@@ -127,6 +127,21 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
+  /*
+   RED: LD5, PB5
+   ORANGE: LD3, PB1
+   GREEN: LD4, PB7
+   BLUE: LD2, PA15
+   */
+  RCC->AHB2ENR |= 1<<1;
+  GPIOB->MODER &= ~(3 << (5*2));
+  GPIOB->MODER |= 1<<(5*2);
+  GPIOB->OTYPER &= ~(1 << 5);
+
+  RCC->AHB2ENR |= 1<<0;
+  GPIOA->MODER &= ~(3 << (15*2));
+  GPIOA->MODER |= 1<<(15*2);
+  GPIOA->OTYPER &= ~(1 << 15);
 
   /* USER CODE END 2 */
 
@@ -135,8 +150,31 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
+	  GPIOB->BSRR = 1<<5;
+	  char txBuffer1[] = "RED LED ON\r\n";
+	  uint16_t Size1 = strlen(txBuffer1);
+	  HAL_UART_Transmit(&huart3, txBuffer1, Size1, 100);
+	  HAL_Delay(1000);
+
+	  GPIOA->BSRR = 1<<15;
+	  char txBuffer3[] = "BLUE LED ON\r\n";
+	  uint16_t Size3 = strlen(txBuffer3);
+	  HAL_UART_Transmit(&huart3, txBuffer3, Size3, 100);
+	  HAL_Delay(1000);
+
+
+	  GPIOB->BSRR = (1<<5) << 16;
+	  char txBuffer2[] = "RED LED OFF\r\n";
+	  uint16_t Size2 = strlen(txBuffer2);
+	  HAL_UART_Transmit(&huart3, txBuffer2, Size2, 100);
+	  HAL_Delay(1000);
+
+	  GPIOA->BSRR = (1<<15) << 16;
+	  char txBuffer4[] = "BLUE LED OFF\r\n";
+	  uint16_t Size4 = strlen(txBuffer4);
+	  HAL_UART_Transmit(&huart3, txBuffer4, Size4, 100);
+	  HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
