@@ -974,6 +974,40 @@ void TIM6_DAC_IRQHandler(void)
     GPIOB->ODR ^= (1<<5);
 	}
 }
+
+bool RED_ADC_Init(void)
+{
+  //PA7, ADC2_IN4
+  RCC->AHB2ENR |= (1<<0) | (1<<13); // ADC12, GPIOA CLK EN
+
+  GPIOA->MODER &= ~(3<<7*2); // PA7 mode init
+  GPIOA->MODER |= (3<<7*2); // PA7 Analog mode
+  GPIOA->PUPDR &= ~(3<<7*2); // PA7 no pull up/down
+
+  ADC2->CR &= ~(1<<29); // Clear Deep Power Down mode
+  ADC2->CR |= (1<<28); // ADC VREG EN
+  HAL_Delay(1); // startup delay
+
+  
+  if(!(ADC2->CR & (1<<29)) && (ADC2->CR & (1<<28)) && !(ADC2->CR & (1<<0)))
+  {
+    ADC2->CR &= ~(1<<30); // Single-Ended Cal 
+    ADC2->CR |= (1<<31); // ADC Calibration start
+    while(ADC2->CR & (1<<31)); // wait until ADECAL=0
+
+    ADC2->SQR1 = 0; // sequence initialize
+    ADC2->SQR1 |= (7<<6); // sequence setup
+    ADC2->SMPR1 = 0; // sample time initialize
+    ADC2->SMPR1 |= (5<<(4*3)); // sample time = 92.5 Clock cycles
+    
+    ADC2->ISR = 1<<0; // ADC Ready clear
+    ADC2->CR |= 1<<0; // ADC EN
+    while(!(ADC2->ISR & (1<<0)));
+    ADC2->ISR = 1<<0; // ADC Ready Clear
+    return 0;
+  }
+  else return 1;
+}
 /* USER CODE END 4 */
 
 /**
